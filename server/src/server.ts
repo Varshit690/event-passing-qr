@@ -3,10 +3,11 @@ import { ENV } from './config/env';
 
 const app = createApp();
 
-const server = app.listen(ENV.PORT, () => {
-  console.log(`🚀 EVENTORA API Server running on port ${ENV.PORT} [${ENV.NODE_ENV}]`);
-  console.log(`📡 Health Check: http://localhost:${ENV.PORT}/api/health`);
-  console.log(`🌐 CORS Allowed Origin: ${ENV.CLIENT_URL}`);
+const port = ENV.PORT;
+const server = app.listen(port, '0.0.0.0', () => {
+  console.log(`🚀 EVENTORA API Server running on port ${port} [${ENV.NODE_ENV}]`);
+  console.log(`📡 Health Check: http://localhost:${port}/api/health`);
+  console.log(`🌐 Primary Client URL: ${ENV.CLIENT_URL}`);
 });
 
 process.on('SIGTERM', () => {
