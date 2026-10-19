@@ -1,0 +1,137 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #09090F;
+  --foreground: #F8FAFC;
+  --surface: #11111B;
+  --surface-secondary: #161624;
+  --surface-hover: #1E1E30;
+  --card: #171723;
+  --card-foreground: #F8FAFC;
+  --card-border: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.08);
+  --muted: #1E1E2E;
+  --muted-foreground: #94A3B8;
+}
+
+.light {
+  --background: #F8FAFC;
+  --foreground: #09090F;
+  --surface: #FFFFFF;
+  --surface-secondary: #F1F5F9;
+  --surface-hover: #E2E8F0;
+  --card: #FFFFFF;
+  --card-foreground: #09090F;
+  --card-border: rgba(0, 0, 0, 0.08);
+  --border: rgba(0, 0, 0, 0.08);
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+}
+
+body {
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background-color: var(--background);
+  color: var(--foreground);
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #09090F;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #27273A;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3B3B54;
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(23, 23, 35, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-nav {
+  background: rgba(9, 9, 15, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.light .glass-nav {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Gradient text */
+.gradient-text-primary {
+  background: linear-gradient(135deg, #A78BFA 0%, #8B5CF6 50%, #06B6D4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text-cyan {
+  background: linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Gradient buttons */
+.btn-gradient {
+  background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-gradient:hover {
+  background: linear-gradient(135deg, #9D74FF 0%, #7C3AED 100%);
+  box-shadow: 0 0 20px -2px rgba(139, 92, 246, 0.5);
+}
+
+.btn-gradient-cyan {
+  background: linear-gradient(135deg, #06B6D4 0%, #0284C7 100%);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-gradient-cyan:hover {
+  background: linear-gradient(135deg, #22D3EE 0%, #0369A1 100%);
+  box-shadow: 0 0 20px -2px rgba(6, 182, 212, 0.5);
+}
+
+/* Perforated ticket styling */
+.ticket-perforation-left {
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--background);
+}
+
+.ticket-perforation-right {
+  position: absolute;
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--background);
+}

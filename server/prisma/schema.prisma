@@ -1,0 +1,196 @@
+// EVENTORA - Prisma Database Schema
+// Discover. Book. Experience.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite" // Seamless zero-setup local dev & tests (can switch to "postgresql" for production)
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("ATTENDEE") // ATTENDEE, ORGANIZER, ADMIN
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  eventsOrganized       Event[]                @relation("EventOrganizer")
+  bookings              Booking[]
+  checkInsPerformed     CheckIn[]              @relation("StaffCheckIns")
+  staffAssignments      EventStaff[]
+  organizerApplications OrganizerApplication[] @relation("UserOrganizerApplications")
+  reviewedApplications  OrganizerApplication[] @relation("AdminReviewedApplications")
+
+  @@map("users")
+}
+
+model Event {
+  id               String   @id @default(cuid())
+  title            String
+  slug             String   @unique
+  description      String
+  shortDescription String?
+  bannerUrl        String
+  location         String
+  venue            String
+  category         String   @default("MUSIC") // MUSIC, TECHNOLOGY, WORKSHOPS, HACKATHONS, CONFERENCES, COLLEGE_FESTS, SPORTS, ARTS_CULTURE
+  startDate        DateTime
+  endDate          DateTime
+  organizerId      String
+  totalCapacity    Int      @default(500)
+  remainingTickets Int      @default(500)
+  minPrice         Float    @default(0)
+  isFeatured       Boolean  @default(false)
+  isTrending       Boolean  @default(false)
+  isPublished      Boolean  @default(true)
+  rules            String?  // JSON stringified array of rules
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  organizer   User         @relation("EventOrganizer", fields: [organizerId], references: [id], onDelete: Cascade)
+  ticketTypes TicketType[]
+  bookings    Booking[]
+  tickets     Ticket[]
+  checkIns    CheckIn[]
+  staff       EventStaff[]
+
+  @@index([category])
+  @@index([startDate])
+  @@map("events")
+}
+
+model TicketType {
+  id                String   @id @default(cuid())
+  eventId           String
+  name              String
+  description       String?
+  price             Float    @default(0)
+  totalQuantity     Int      @default(100)
+  remainingQuantity Int      @default(100)
+  maxPerUser        Int      @default(4)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  event   Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  tickets Ticket[]
+
+  @@index([eventId])
+  @@map("ticket_types")
+}
+
+model Booking {
+  id           String   @id @default(cuid())
+  userId       String
+  eventId      String
+  status       String   @default("CONFIRMED") // CONFIRMED, PENDING, CANCELLED
+  totalAmount  Float    @default(0)
+  ticketsCount Int      @default(1)
+  idempotencyKey String? @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event   Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  tickets Ticket[]
+
+  @@index([userId])
+  @@index([eventId])
+  @@map("bookings")
+}
+
+model Ticket {
+  id             String    @id @default(cuid())
+  ticketNumber   String    @unique
+  bookingId      String
+  eventId        String
+  ticketTypeId   String
+  qrCodeToken    String    @unique // Unpredictable cryptographically secure token
+  tokenHash      String    @unique // SHA-256 hash for fast indexing
+  status         String    @default("VALID") // VALID, CHECKED_IN, CANCELLED
+  attendeeName   String
+  attendeeEmail  String
+  checkedInAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Relations
+  booking    Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  event      Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  ticketType TicketType @relation(fields: [ticketTypeId], references: [id], onDelete: Cascade)
+  checkIns   CheckIn[]
+
+  @@index([bookingId])
+  @@index([eventId])
+  @@index([tokenHash])
+  @@index([ticketNumber])
+  @@map("tickets")
+}
+
+model CheckIn {
+  id           String   @id @default(cuid())
+  ticketId     String
+  eventId      String
+  verifiedById String
+  notes        String?
+  createdAt    DateTime @default(now())
+
+  // Relations
+  ticket     Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  event      Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  verifiedBy User   @relation("StaffCheckIns", fields: [verifiedById], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@index([eventId])
+  @@map("check_ins")
+}
+
+model EventStaff {
+  id        String   @id @default(cuid())
+  eventId   String
+  userId    String
+  role      String   @default("SCANNER") // SCANNER, MANAGER
+  createdAt DateTime @default(now())
+
+  // Relations
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@map("event_staff")
+}
+
+model OrganizerApplication {
+  id               String    @id @default(cuid())
+  userId           String
+  organizationName String
+  collegeOrOrg     String
+  contactPhone     String
+  contactEmail     String
+  category         String    @default("TECHNOLOGY")
+  reason           String
+  website          String?
+  status           String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  rejectionReason  String?
+  reviewedById     String?
+  reviewedAt       DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  // Relations
+  user       User  @relation("UserOrganizerApplications", fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy User? @relation("AdminReviewedApplications", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([status])
+  @@map("organizer_applications")
+}

@@ -1,0 +1,16 @@
+{
+  "name": "eventora",
+  "version": "1.0.0",
+  "description": "EVENTORA - Discover. Book. Experience. Premium Event Ticketing with QR Pass",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n \"SERVER,CLIENT\" -c \"cyan,magenta\" \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "npm run --prefix client dev",
+    "dev:server": "npm run --prefix server dev",
+    "build": "npm run --prefix client build && npm run --prefix server build",
+    "test": "npm run --prefix server test"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.5"
+  }
+}
