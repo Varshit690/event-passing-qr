@@ -12,18 +12,17 @@ import {
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Card } from '../components/ui/Card';
-import { MOCK_EVENTS } from '../services/mockEvents';
 import { api } from '../services/api';
 
 export const OrganizerDashboardPage = () => {
-  const [events, setEvents] = useState(MOCK_EVENTS);
+  const [events, setEvents] = useState([]);
   const [stats, setStats] = useState({
-    totalEvents: 3,
-    totalBookings: 840,
-    ticketsIssued: 920,
-    ticketsCheckedIn: 614,
-    totalCapacity: 8100,
-    totalRevenue: 14200,
+    totalEvents: 0,
+    totalBookings: 0,
+    ticketsIssued: 0,
+    ticketsCheckedIn: 0,
+    totalCapacity: 0,
+    totalRevenue: 0,
   });
 
   useEffect(() => {
@@ -33,12 +32,17 @@ export const OrganizerDashboardPage = () => {
         if (res.data?.stats) {
           setStats(res.data.stats);
         }
-        if (res.data?.events && res.data.events.length > 0) {
+        if (res.data?.events && Array.isArray(res.data.events)) {
           setEvents(res.data.events);
         }
       })
       .catch(() => {
-        // Fallback to computed stats
+        // Fallback to public events if analytics endpoint unavailable
+        api.get('/events').then((res) => {
+          if (res.data?.events) {
+            setEvents(res.data.events);
+          }
+        }).catch(() => {});
       });
   }, []);
 

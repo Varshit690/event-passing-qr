@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import mongoose from 'mongoose';
 import QRCode from 'qrcode';
 import { Booking, Event, Ticket, TicketType } from '../models/index.js';
 import { createBookingSchema } from '../validators/bookingValidators.js';
@@ -48,16 +49,15 @@ export const createBooking = async (req, res, next) => {
       }
     }
 
-    // 2. Find event by ID, slug, or alias
-    const eventSlugMap = {
-      'evt-1': 'pulse-neon-fest-2026',
-      'evt-2': 'hacknova-2026-global-ai-hackathon',
-      'evt-3': 'apex-campus-fest-2026',
-    };
-    const searchSlug = eventSlugMap[eventId] || eventId;
+    // 2. Find event by valid ObjectId or slug
+    const isMongoId = mongoose.Types.ObjectId.isValid(eventId);
+    const searchConditions = [{ slug: eventId }];
+    if (isMongoId) {
+      searchConditions.unshift({ _id: eventId });
+    }
 
     const event = await Event.findOne({
-      $or: [{ _id: eventId }, { slug: eventId }, { slug: searchSlug }],
+      $or: searchConditions,
     });
 
     if (!event) {
@@ -80,32 +80,16 @@ export const createBooking = async (req, res, next) => {
     const tierUpdates = [];
 
     for (const item of items) {
-      const ticketTierMap = {
-        'tt-1-1': 'Early Bird General Admission',
-        'tt-1-2': 'VIP Front Stage & Lounge Pass',
-        'tt-2-1': 'Hacker Pass (Free RSVP)',
-        'tt-2-2': 'Observer & Showcase Pass',
-        'tt-3-1': 'Student Festival Pass (All 3 Days)',
-        'tt-3-2': 'Star Night Musical Pass',
-      };
-      const targetTierName = ticketTierMap[item.ticketTypeId];
-
-      let ticketType = eventTicketTypes.find(
+      const ticketType = eventTicketTypes.find(
         (tt) =>
           tt.id === item.ticketTypeId ||
-          tt._id.toString() === item.ticketTypeId ||
-          (targetTierName && tt.name.toLowerCase() === targetTierName.toLowerCase()) ||
-          tt.name.toLowerCase() === item.ticketTypeId.toLowerCase()
+          tt._id.toString() === item.ticketTypeId
       );
-
-      if (!ticketType && eventTicketTypes.length > 0) {
-        ticketType = eventTicketTypes[0];
-      }
 
       if (!ticketType) {
         res.status(400).json({
           success: false,
-          message: `Ticket type ${item.ticketTypeId} not found for this event.`,
+          message: `Ticket tier with ID "${item.ticketTypeId}" not found for this event.`,
         });
         return;
       }

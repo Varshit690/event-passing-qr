@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { EventCard } from '../components/events/EventCard';
-import { MOCK_EVENTS, CATEGORIES_CONFIG } from '../services/mockEvents';
+import { CATEGORIES_CONFIG } from '../services/mockEvents';
 import { api } from '../services/api';
 
 export const LandingPage = () => {
@@ -31,7 +31,8 @@ export const LandingPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('All Locations');
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [events, setEvents] = useState(MOCK_EVENTS);
+  const [events, setEvents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (location.hash === '#portals') {
@@ -43,13 +44,19 @@ export const LandingPage = () => {
   }, [location.hash]);
 
   useEffect(() => {
+    setIsLoading(true);
     api.get('/events')
       .then((res) => {
-        if (res.data?.success && Array.isArray(res.data.events) && res.data.events.length > 0) {
+        if (res.data?.success && Array.isArray(res.data.events)) {
           setEvents(res.data.events);
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error('Failed to load events:', err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, []);
 
   const featuredEvents = events.filter((e) => e.isFeatured).length > 0
@@ -466,9 +473,19 @@ export const LandingPage = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredEvents.slice(0, 3).map((event) => (
-            <EventCard key={event.id} event={event} featured />
-          ))}
+          {isLoading ? (
+            [1, 2, 3].map((n) => (
+              <div key={n} className="h-72 rounded-xl bg-slate-100 animate-pulse border border-slate-200" />
+            ))
+          ) : featuredEvents.length > 0 ? (
+            featuredEvents.slice(0, 3).map((event) => (
+              <EventCard key={event.id} event={event} featured />
+            ))
+          ) : (
+            <div className="col-span-full py-8 text-center text-sm text-slate-500">
+              No featured events at this time.
+            </div>
+          )}
         </div>
       </section>
 
@@ -529,9 +546,19 @@ export const LandingPage = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {trendingEvents.map((event) => (
-            <EventCard key={event.id} event={event} />
-          ))}
+          {isLoading ? (
+            [1, 2, 3].map((n) => (
+              <div key={n} className="h-72 rounded-xl bg-slate-100 animate-pulse border border-slate-200" />
+            ))
+          ) : trendingEvents.length > 0 ? (
+            trendingEvents.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))
+          ) : (
+            <div className="col-span-full py-8 text-center text-sm text-slate-500">
+              No events found.
+            </div>
+          )}
         </div>
       </section>
 

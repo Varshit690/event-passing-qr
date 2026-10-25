@@ -11,7 +11,6 @@ import {
   Ticket as TicketIcon
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { MOCK_EVENTS } from '../services/mockEvents';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { DigitalTicketCard } from '../components/tickets/DigitalTicketCard';
@@ -23,10 +22,9 @@ export const CheckoutPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [event, setEvent] = useState(() => {
-    return MOCK_EVENTS.find((e) => e.id === eventId) || MOCK_EVENTS[0];
-  });
+  const [event, setEvent] = useState(null);
   const [isEventLoading, setIsEventLoading] = useState(true);
+  const [eventError, setEventError] = useState(null);
 
   // Parse items from URL query
   const itemsParam = searchParams.get('items');
@@ -47,14 +45,18 @@ export const CheckoutPage = () => {
   useEffect(() => {
     if (eventId) {
       setIsEventLoading(true);
+      setEventError(null);
       api.get(`/events/${eventId}`)
         .then((res) => {
           if (res.data?.success && res.data.event) {
             setEvent(res.data.event);
+          } else {
+            setEventError('Event not found.');
           }
         })
         .catch((err) => {
           console.error('Failed to load event details:', err);
+          setEventError(err?.response?.data?.message || 'Event not found or has been removed.');
         })
         .finally(() => {
           setIsEventLoading(false);
@@ -63,7 +65,7 @@ export const CheckoutPage = () => {
   }, [eventId]);
 
   // Calculate totals
-  const selectedTiers = (event.ticketTypes || []).filter((tt) => (initialQuantities[tt.id] || 0) > 0);
+  const selectedTiers = (event?.ticketTypes || []).filter((tt) => (initialQuantities[tt.id] || 0) > 0);
   const totalTickets = Object.values(initialQuantities).reduce((a, b) => a + b, 0);
   const grandTotal = selectedTiers.reduce((sum, tt) => sum + (initialQuantities[tt.id] || 0) * tt.price, 0);
 
@@ -138,6 +140,32 @@ export const CheckoutPage = () => {
       setIsLoading(false);
     }
   };
+
+  if (isEventLoading) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-20 text-center space-y-4">
+        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
+        <p className="text-sm font-medium text-slate-500">Loading checkout details...</p>
+      </div>
+    );
+  }
+
+  if (eventError || !event) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-20 text-center space-y-4">
+        <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+          <TicketIcon className="w-6 h-6" />
+        </div>
+        <h2 className="text-xl font-bold text-slate-900">Event Not Found</h2>
+        <p className="text-sm text-slate-500">
+          {eventError || 'The event you are trying to book does not exist or has expired.'}
+        </p>
+        <Button variant="primary" size="md" onClick={() => navigate('/events')}>
+          Browse All Events
+        </Button>
+      </div>
+    );
+  }
 
   if (isConfirmed) {
     return (

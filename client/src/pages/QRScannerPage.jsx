@@ -13,12 +13,11 @@ import {
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { MOCK_EVENTS } from '../services/mockEvents';
 import { api } from '../services/api';
 
 export const QRScannerPage = () => {
-  const [eventsList, setEventsList] = useState(MOCK_EVENTS);
-  const [selectedEventId, setSelectedEventId] = useState(MOCK_EVENTS[0].id);
+  const [eventsList, setEventsList] = useState([]);
+  const [selectedEventId, setSelectedEventId] = useState('');
   const [manualCode, setManualCode] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState(null);
@@ -41,10 +40,12 @@ export const QRScannerPage = () => {
           setSelectedEventId(res.data.events[0].id);
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error('Failed to load events for scanner:', err);
+      });
   }, []);
 
-  const selectedEvent = eventsList.find((e) => e.id === selectedEventId) || eventsList[0] || MOCK_EVENTS[0];
+  const selectedEvent = eventsList.find((e) => e.id === selectedEventId) || eventsList[0] || null;
 
   // Beep Sound Effects
   const playBeep = (type) => {

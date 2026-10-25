@@ -12,7 +12,6 @@ import {
   Ticket as TicketIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { MOCK_EVENTS } from '../services/mockEvents';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { EventCard } from '../components/events/EventCard';
@@ -22,36 +21,76 @@ export const EventDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [event, setEvent] = useState(() => {
-    return MOCK_EVENTS.find((e) => e.id === id) || MOCK_EVENTS[0];
-  });
+  const [event, setEvent] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [quantities, setQuantities] = useState({});
+  const [relatedEvents, setRelatedEvents] = useState([]);
 
   useEffect(() => {
-    if (id) {
-      api.get(`/events/${id}`)
-        .then((res) => {
-          if (res.data?.success && res.data.event) {
-            setEvent(res.data.event);
+    if (!id) return;
+    setIsLoading(true);
+    setError(null);
+
+    api.get(`/events/${id}`)
+      .then((res) => {
+        if (res.data?.success && res.data.event) {
+          const loadedEvent = res.data.event;
+          setEvent(loadedEvent);
+
+          // Initialize ticket quantities with the first tier from the real database event
+          if (loadedEvent.ticketTypes && loadedEvent.ticketTypes.length > 0) {
+            setQuantities({ [loadedEvent.ticketTypes[0].id]: 1 });
+          } else {
+            setQuantities({});
           }
-        })
-        .catch(() => {
-          // Fallback to local mock
-          const fallback = MOCK_EVENTS.find((e) => e.id === id);
-          if (fallback) setEvent(fallback);
-        });
-    }
+
+          // Fetch related events from live API
+          api.get(`/events?category=${loadedEvent.category}&limit=4`)
+            .then((catRes) => {
+              if (catRes.data?.success && Array.isArray(catRes.data.events)) {
+                setRelatedEvents(catRes.data.events.filter((e) => e.id !== loadedEvent.id).slice(0, 3));
+              }
+            })
+            .catch(() => {});
+        } else {
+          setError('Event not found.');
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load event details:', err);
+        setError(err.response?.data?.message || 'Event not found or has been removed.');
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, [id]);
 
-  const relatedEvents = MOCK_EVENTS.filter((e) => e.id !== event.id && e.category === event.category).slice(0, 3);
+  if (isLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center space-y-4">
+        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
+        <p className="text-sm font-medium text-slate-500">Loading event details...</p>
+      </div>
+    );
+  }
 
-  // Ticket quantities state
-  const [quantities, setQuantities] = useState(() => {
-    const initial = {};
-    if (event.ticketTypes && event.ticketTypes.length > 0) {
-      initial[event.ticketTypes[0].id] = 1; // default 1 of first tier
-    }
-    return initial;
-  });
+  if (error || !event) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-20 text-center space-y-4">
+        <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+          <TicketIcon className="w-6 h-6" />
+        </div>
+        <h2 className="text-xl font-bold text-slate-900">Event Not Found</h2>
+        <p className="text-sm text-slate-500">
+          {error || 'The event you are looking for does not exist or has been removed.'}
+        </p>
+        <Button variant="primary" size="md" onClick={() => navigate('/events')}>
+          Browse All Events
+        </Button>
+      </div>
+    );
+  }
 
   const formattedStartDate = new Date(event.startDate).toLocaleDateString('en-US', {
     weekday: 'long',

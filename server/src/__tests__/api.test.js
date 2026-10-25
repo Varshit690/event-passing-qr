@@ -488,11 +488,12 @@ describe('EVENTORA Full-Stack REST API & Security Test Suite', () => {
       freshToken = res.body.token;
     });
 
-    it('Step 3: Book one free ticket (supports both real event ID and slug/alias fallback)', async () => {
+    it('Step 3: Book one free ticket with valid database ObjectId', async () => {
       const freeTicket = await TicketType.findOne({ price: 0 });
+      expect(freeTicket).not.toBeNull();
 
-      const eventIdToUse = freeTicket ? freeTicket.eventId : 'evt-1';
-      const ticketTypeIdToUse = freeTicket ? freeTicket.id : 'tt-1-1';
+      const eventIdToUse = freeTicket.eventId;
+      const ticketTypeIdToUse = freeTicket.id;
 
       const res = await request(app)
         .post('/api/bookings')
@@ -610,6 +611,25 @@ describe('EVENTORA Full-Stack REST API & Security Test Suite', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.ticket.qrCodeDataUrl).toMatch(/^data:image\/png;base64/);
       expect(res.body.ticket.qrCodeToken).toMatch(/^EVT-/);
+    });
+
+    it('Step 13: Gracefully handles invalid event IDs (e.g. "evt-1") without Mongoose CastError 500', async () => {
+      // 1. GET /api/events/evt-1 should return 404, not 500
+      const getRes = await request(app).get('/api/events/evt-1');
+      expect(getRes.status).toBe(404);
+      expect(getRes.body.success).toBe(false);
+
+      // 2. POST /api/bookings with invalid eventId should return 404, not CastError 500
+      const bookRes = await request(app)
+        .post('/api/bookings')
+        .set('Authorization', `Bearer ${freshToken}`)
+        .send({
+          eventId: 'evt-1',
+          items: [{ ticketTypeId: 'tt-1-1', quantity: 1 }],
+        });
+      expect(bookRes.status).toBe(404);
+      expect(bookRes.body.success).toBe(false);
+      expect(bookRes.body.message).toContain('Event not found');
     });
   });
 });

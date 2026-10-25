@@ -1,5 +1,13 @@
+import dns from 'dns';
 import mongoose from 'mongoose';
 import { ENV } from './env.js';
+
+// Configure DNS resolvers to reliably resolve MongoDB Atlas SRV records
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (err) {
+  console.warn('⚠️ Warning: Failed to set custom DNS servers:', err.message);
+}
 
 export const connectDB = async (uri) => {
   const mongoUri = uri || ENV.MONGODB_URI;

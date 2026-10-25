@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { EventCard } from '../components/events/EventCard';
 import { Button } from '../components/ui/Button';
-import { MOCK_EVENTS, CATEGORIES_CONFIG } from '../services/mockEvents';
+import { CATEGORIES_CONFIG } from '../services/mockEvents';
 import { api } from '../services/api';
 
 export const EventsPage = () => {
@@ -28,18 +28,23 @@ export const EventsPage = () => {
   const [sortBy, setSortBy] = useState(initialSort);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
-  const [liveEvents, setLiveEvents] = useState(MOCK_EVENTS);
+  const [liveEvents, setLiveEvents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Fetch live events from API
   useEffect(() => {
+    setIsLoading(true);
     api.get('/events')
       .then((res) => {
-        if (res.data?.success && res.data.events?.length > 0) {
+        if (res.data?.success && Array.isArray(res.data.events)) {
           setLiveEvents(res.data.events);
         }
       })
-      .catch(() => {
-        // Fallback to initial mock events
+      .catch((err) => {
+        console.error('Failed to load events:', err);
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   }, []);
 
@@ -292,7 +297,13 @@ export const EventsPage = () => {
           </div>
 
           {/* Event Cards Grid */}
-          {filteredEvents.length > 0 ? (
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5">
+              {[1, 2, 3, 4, 5, 6].map((n) => (
+                <div key={n} className="h-72 rounded-xl bg-slate-100 animate-pulse border border-slate-200" />
+              ))}
+            </div>
+          ) : filteredEvents.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5">
               {filteredEvents.map((event) => (
                 <EventCard key={event.id} event={event} />

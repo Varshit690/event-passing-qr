@@ -125,15 +125,8 @@ export const getEventById = async (req, res, next) => {
   try {
     const id = req.params.id;
 
-    const eventSlugMap = {
-      'evt-1': 'pulse-neon-fest-2026',
-      'evt-2': 'hacknova-2026-global-ai-hackathon',
-      'evt-3': 'apex-campus-fest-2026',
-    };
-    const searchSlug = eventSlugMap[id] || id;
-
     const isMongoId = mongoose.Types.ObjectId.isValid(id);
-    const searchConditions = [{ slug: id }, { slug: searchSlug }];
+    const searchConditions = [{ slug: id }];
     if (isMongoId) {
       searchConditions.unshift({ _id: id });
     }

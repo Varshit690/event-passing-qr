@@ -15,6 +15,14 @@ export const errorHandler = (err, _req, res, _next) => {
     return;
   }
 
+  if (err.name === 'CastError') {
+    res.status(404).json({
+      success: false,
+      message: `Resource not found with identifier: ${err.value}`,
+    });
+    return;
+  }
+
   const statusCode = err.statusCode || 500;
   const message = err.message || 'Internal server error occurred.';
 
