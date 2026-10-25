@@ -1,68 +1,126 @@
-# EVENTORA — Discover. Book. Experience.
+# EVENTORA — Event Ticketing with QR Pass (JavaScript MERN Stack)
 
-> **Next-Generation Event Discovery, Cryptographic QR Pass Issuance & Real-Time Gate Verification Platform**
+> **College Event Discovery, Cryptographic Digital QR Pass Issuance & Real-Time Gate Verification Platform**
 
-EVENTORA is an event ticketing platform built for college festivals, music concerts, tech conferences, hackathons, workshops, and community events.
+EVENTORA is a JavaScript-only MERN stack event ticketing and pass verification web application designed for campus festivals, technical hackathons, cultural concerts, and academic workshops.
+
+---
+
+## 🛠️ JavaScript MERN Stack Architecture
+
+| Layer | Technology | Description |
+|---|---|---|
+| **Frontend** | React.js (JavaScript + JSX), Vite, Tailwind CSS | Responsive SPA with clean blue-and-white theme, ticket purchasing, digital pass viewer, and camera QR scanner |
+| **Backend** | Node.js + Express.js (JavaScript ES Modules) | RESTful API server with JWT authentication, role-based authorization (RBAC), and atomic transaction safety |
+| **Database** | MongoDB with Mongoose | Document database with schema validation, indexes, and atomic updates |
+| **Database Hosting** | MongoDB Atlas | Cloud-hosted MongoDB cluster for production and team collaboration |
+| **Frontend Hosting** | Vercel | Global edge CDN hosting for the Vite React frontend |
+| **Backend Hosting** | Render | Managed Node.js service running pure JavaScript Express API |
+
+> **Faculty / Academic Requirement**:
+> - Frontend: **React.js using JavaScript and JSX** (no TypeScript)
+> - Backend: **Node.js + Express.js using JavaScript** (no TypeScript)
+> - Database: **MongoDB using Mongoose**
 
 ---
 
 ## 🌟 Key Features
 
-### 1. Modern UI/UX (Linear / Stripe / Apple Inspired)
-- **Dark-First Design System**: Handpicked color palette (`#09090F`, `#11111B`, `#171723`, vibrant `#8B5CF6` and `#06B6D4` accents) with a theme switcher supporting dark and light modes.
-- **Micro-Interactions**: Smooth hover elevations, glassmorphism blur, badge chips, and celebration confetti.
-- **Mobile-First Responsive Layout**: Optimized for mobile phones, tablets, and desktop displays.
+### 1. Clean, Accessible College Student UI
+- Designed with a clean, professional blue-and-white visual identity:
+  - **Primary Blue**: `#2563EB`
+  - **Dark Navy Text**: `#0F172A`
+  - **Page Background**: `#F8FAFC`
+  - **White Cards**: `#FFFFFF`
+  - **Success Green**: `#16A34A`
+- Fully responsive across mobile smartphones, tablets, and desktop computers.
 
-### 2. Event Discovery & Browsing
-- **Real-Time Search & Filtering**: Filter by category (Music, Tech, Hackathons, College Fests, Workshops, Sports, etc.), location, and pricing tier (Free RSVP vs Paid).
-- **URL Parameter Synchronization**: Search queries, categories, and filters sync directly with browser URL parameters for shareable links.
-- **Detailed Event Pages**: Hero banners, organizer badges, interactive ticket tier selections, live pricing calculations, and guideline lists.
+### 2. Multi-Role Authentication & Access Control (RBAC)
+- **Attendee**: Browse events, reserve free/paid tickets, view and download digital QR passes with instant PDF generation.
+- **Organizer**: Create and manage events, monitor ticket sales telemetry, and access real-time camera/manual gate scanner.
+- **Admin**: Review organizer applications, govern user roles, manage platform events, and review platform-wide analytics.
 
-### 3. Cryptographic Digital QR Passes & PDF Export
-- **Security-First QR Pass**: Passes are generated with non-sequential, 128-bit cryptographically secure unpredictable tokens (`EVT-XXXXX`) and stored as SHA-256 hashes.
-- **Perforated Ticket Container Design**: Digital passes with notch cutouts, ref codes, attendee details, and live QR code rendering.
-- **Instant PDF Export & Print**: One-click PDF download generated client-side using `jspdf`.
+### 3. Cryptographic QR Passes & Double-Scan Prevention
+- **Entropy & Hashing**: Every ticket receives a 128-bit cryptographically secure unpredictable token (`EVT-XXXXX`) and a SHA-256 hash.
+- **Atomic Concurrency Guarantee**: Scanner redemption uses atomic MongoDB operations (`findOneAndUpdate({ _id: ticket.id, status: 'VALID' }, ...)`), ensuring duplicate or simultaneous scans at multiple entry gates are immediately rejected with `ALREADY_USED`.
+- **Offline / Camera Verification**: Organizers can scan QR passes via device cameras (`html5-qrcode`) or manually enter the ticket reference code.
 
-### 4. Dedicated Organizer Gate Scanner & Anti-Fraud Verification
-- **Dual Verification Modes**: Real-time camera QR scanning via `html5-qrcode` and manual reference code fallback.
-- **Atomic Multi-Scanner Protection**: Database transactions guarantee that two gate scanners cannot redeem the same ticket simultaneously.
-- **Audio & Visual Feedback**: Distinct audio cues and animated feedback states:
-  - 🟢 **VALID**: Access Granted (Green)
-  - 🟡 **ALREADY_USED**: Duplicate Rejection with Previous Check-in Timestamp (Amber)
-  - 🔴 **INVALID / WRONG_EVENT**: Fraudulent or Wrong Event Pass (Red)
-
-### 5. SaaS Organizer & Admin Dashboards
-- **Real-Time Telemetry**: Check-in velocity and gate throughput charts powered by `recharts`.
-- **Occupancy Metrics**: Live progress bars tracking capacity utilization, tickets issued, and remaining spots.
-- **Platform Administration**: User directory, event moderation, and system health status.
-
----
-
-## 🛠️ Technology Stack
-
-| Layer | Technologies |
-|---|---|
-| **Frontend** | React 19, TypeScript, Vite, Tailwind CSS, Lucide React, Framer Motion, TanStack Query, Recharts, Sonner, Canvas Confetti |
-| **Backend** | Node.js, Express.js, TypeScript, REST APIs, Helmet, CORS, Cookie-Parser, Morgan, Zod |
-| **Database** | SQLite (zero-setup local development) & PostgreSQL compatible, Prisma ORM, Prisma Migrations & Seed |
-| **Security** | bcrypt password hashing, JWT sessions, SHA-256 token hashing, atomic transactions |
-| **Testing** | Vitest, Supertest integration testing suite |
+### 4. Mongoose Document Models
+- `User`: Accounts with bcrypt password hashing, roles (`ATTENDEE`, `ORGANIZER`, `ADMIN`), and avatars.
+- `Event`: Complete event metadata, dates, venue, pricing, categories, and capacity counters.
+- `TicketType`: Event pricing tiers with individual capacities and per-user limits.
+- `Booking`: Order records with idempotency keys to prevent duplicate charges or double reservations.
+- `Ticket`: Issued digital passes linked to attendee, event, and booking.
+- `CheckIn`: Immutable audit logs for entry gate scans with verifier ID and timestamps.
+- `EventStaff`: Role delegation for event volunteers and gate verifiers.
+- `OrganizerApplication`: Workflow for attendee accounts to apply for verified organizer status.
 
 ---
 
-## 🚀 Quick Start Guide
+## 📁 Project Structure
+
+```text
+Event Ticketing with QR Pass/
+├── client/                     # Frontend (React.js + JSX)
+│   ├── index.html              # HTML5 entry pointing to /src/main.jsx
+│   ├── package.json            # React & Vite dependencies (no TypeScript)
+│   ├── vite.config.js          # Vite configuration in JavaScript
+│   └── src/
+│       ├── main.jsx            # React root mount
+│       ├── App.jsx             # React router & layout routes
+│       ├── index.css           # Tailwind CSS & theme tokens
+│       ├── components/
+│       │   ├── auth/           # ProtectedRoute.jsx
+│       │   ├── common/         # ErrorBoundary.jsx
+│       │   ├── events/         # EventCard.jsx
+│       │   ├── layout/         # Navbar.jsx, Footer.jsx
+│       │   ├── tickets/        # DigitalTicketCard.jsx
+│       │   └── ui/             # Button, Badge, Card, Input, Modal, Tabs, Skeleton
+│       ├── contexts/           # AuthContext.jsx, ThemeContext.jsx
+│       ├── pages/              # LandingPage, EventsPage, EventDetailsPage,
+│       │                       # CheckoutPage, TicketsPage, QRScannerPage,
+│       │                       # OrganizerDashboardPage, CreateEventPage,
+│       │                       # AdminDashboardPage, BecomeOrganizerPage,
+│       │                       # LoginPage, RegisterPage, NotFoundPage
+│       ├── services/           # api.js, mockEvents.js
+│       ├── types/              # index.js (constants and configuration)
+│       └── utils/              # cn.js (clsx & twMerge)
+│
+├── server/                     # Backend (Node.js + Express.js + Mongoose)
+│   ├── package.json            # Node.js ES Module dependencies (no TypeScript)
+│   ├── vitest.config.js        # Vitest configuration in JavaScript
+│   └── src/
+│       ├── server.js           # Express server entry point
+│       ├── app.js              # Express app setup, CORS, helmet, routes
+│       ├── config/
+│       │   ├── db.js           # MongoDB connection handler via Mongoose
+│       │   └── env.js          # Environment variable parser
+│       ├── controllers/        # auth, event, booking, ticket, checkIn, dashboard, organizer
+│       ├── middleware/         # auth.js (JWT & RBAC), errorHandler.js
+│       ├── models/             # User, Event, TicketType, Booking, Ticket, CheckIn, EventStaff, OrganizerApplication
+│       ├── routes/             # authRoutes, eventRoutes, bookingRoutes, ticketRoutes, checkInRoutes, dashboardRoutes
+│       ├── scripts/            # seed.js, bootstrapAdmin.js
+│       ├── validators/         # Zod request validators
+│       └── __tests__/          # api.test.js, roleManagement.test.js
+│
+├── package.json                # Root scripts (npm run dev, npm test)
+└── README.md                   # Project documentation
+```
+
+---
+
+## 🚀 Getting Started Locally
 
 ### Prerequisites
 - Node.js (v18 or higher)
 - npm (v9 or higher)
+- MongoDB: Local MongoDB instance or free cloud cluster on [MongoDB Atlas](https://www.mongodb.com/atlas)
 
-### 1. Installation
-Clone or navigate to the repository directory and install dependencies:
+### 1. Install Dependencies
+
+From the project root:
 
 ```bash
-# Install root orchestrator dependencies
-npm install
-
 # Install client dependencies
 cd client
 npm install --legacy-peer-deps
@@ -74,101 +132,108 @@ npm install
 cd ..
 ```
 
-### 2. Database Setup & Seeding
-From the `server` directory, push the Prisma schema and seed initial demo data:
+### 2. Configure Environment Variables
+
+Create `server/.env` based on `server/.env.example`:
+
+```env
+PORT=5000
+NODE_ENV=development
+
+# For Local MongoDB:
+MONGODB_URI="mongodb://127.0.0.1:27017/eventora"
+
+# Or for MongoDB Atlas:
+# MONGODB_URI="mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/eventora?retryWrites=true&w=majority"
+
+JWT_SECRET="your_secure_random_jwt_secret_here"
+JWT_EXPIRES_IN="7d"
+CLIENT_URL="http://localhost:5173"
+```
+
+### 3. Seed Database
+
+Populate demo events, users, and ticket passes directly into MongoDB:
 
 ```bash
 cd server
-# Push schema to SQLite database (dev.db)
-npx prisma db push
-
-# Seed realistic demo users, events, and tickets
-npx tsx prisma/seed.ts
+npm run seed
 cd ..
 ```
 
-### 3. Run Development Servers
-From the root directory, launch both client and server concurrently:
+### 4. Run Development Servers
+
+Run both the React frontend and Express backend concurrently from the root directory:
 
 ```bash
-# Runs Server on http://localhost:5000 and Client on http://localhost:5173
 npm run dev
 ```
 
-Alternatively, run individually:
-- Client: `npm run dev:client` (http://localhost:5173)
-- Server: `npm run dev:server` (http://localhost:5000)
+Or run them individually in separate terminals:
+- **Backend**: `cd server && npm run dev` (starts on `http://localhost:5000`)
+- **Frontend**: `cd client && npm run dev` (starts on `http://localhost:5173`)
+
+---
+
+## 👤 Pre-Seeded Demo Accounts
+
+| Role | Email | Password | Access Privileges |
+|---|---|---|---|
+| **Attendee** | `alex@eventora.io` | `password123` | Event booking, digital QR passes, PDF export |
+| **Organizer** | `organizer@eventora.io` | `password123` | Event publishing, organizer dashboard, QR gate scanner |
+| **Admin** | `admin@eventora.io` | `password123` | Platform governance, organizer approvals, user directory |
 
 ---
 
 ## 🧪 Running Automated Tests
 
-The backend includes an automated integration test suite covering registration, login, RBAC permissions, ticket booking transactions, capacity limits, and QR verification:
+The test suite runs end-to-end integration tests using Vitest and an in-memory MongoDB server:
 
 ```bash
 cd server
-npm run test
+npm test
 ```
 
-All 15 integration tests run and pass against the Prisma database.
+All integration tests validate:
+- Authentication & JWT issuance
+- Role-based authorization & portal boundaries
+- Event CRUD operations
+- Concurrency & idempotency during checkout
+- Cryptographic QR pass generation & atomic double-scan protection
+- Organizer applications, approvals, and role elevation
 
 ---
 
-## 👤 Demo Accounts
+## 🌐 Production Deployment Guide
 
-| Role | Email | Password | Access |
-|---|---|---|---|
-| **Attendee** | `alex@eventora.io` | `password123` | Event booking, digital QR passes, PDF export |
-| **Organizer** | `organizer@eventora.io` | `password123` | Event creation, SaaS telemetry, gate QR scanner |
-| **Admin** | `admin@eventora.io` | `password123` | Platform governance, user directory, system health |
+### A. Database: MongoDB Atlas
+1. Create a free cluster on [MongoDB Atlas](https://www.mongodb.com/atlas).
+2. Under **Database Access**, create a user with Read and Write permissions.
+3. Under **Network Access**, add `0.0.0.0/0` (Allow Access from Anywhere) to permit connections from Render.
+4. Click **Connect** -> **Drivers** -> Copy the connection string:
+   `mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/eventora?retryWrites=true&w=majority`
 
-*(Tip: In the top navigation bar, use the quick role switcher pill to instantly preview the application from any perspective!)*
+### B. Backend: Render
+1. Create a new **Web Service** on [Render](https://render.com) pointing to your GitHub repository.
+2. Configure settings:
+   - **Root Directory**: `server`
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
+3. Add Environment Variables:
+   - `MONGODB_URI`: `<Your MongoDB Atlas connection string>`
+   - `JWT_SECRET`: `<Secure random 32+ char string>`
+   - `JWT_EXPIRES_IN`: `7d`
+   - `NODE_ENV`: `production`
+   - `CLIENT_URL`: `https://<your-vercel-app>.vercel.app`
+4. Deploy the service and copy the Render service URL.
 
----
-
-## 📂 Project Structure
-
-```text
-eventora/
-├── client/                     # Frontend Application
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── ui/             # Reusable design primitives (Button, Card, Badge, Modal, Input, Tabs)
-│   │   │   ├── layout/         # Glass Navbar, Footer
-│   │   │   ├── events/         # EventCard
-│   │   │   └── tickets/        # DigitalTicketCard with perforation & PDF export
-│   │   ├── contexts/           # AuthContext, ThemeContext
-│   │   ├── pages/              # Landing, Events, EventDetails, Checkout, Tickets, Scanner, Dashboards
-│   │   ├── services/           # Axios API client, Mock Events dataset
-│   │   ├── types/              # TypeScript interfaces
-│   │   └── utils/              # Class merging utilities (cn)
-│   ├── tailwind.config.js      # Color tokens & glow shadows
-│   └── index.html              # Google Fonts & SEO metadata
-├── server/                     # Backend API & Database
-│   ├── prisma/
-│   │   ├── schema.prisma       # 7 relational models with indexes & cascades
-│   │   └── seed.ts             # Comprehensive database seed
-│   ├── src/
-│   │   ├── config/             # Prisma client singleton, typed environment
-│   │   ├── controllers/        # Auth, Events, Bookings, Tickets, CheckIn, Dashboards
-│   │   ├── middleware/         # JWT Auth, Role-based guard, Error handler
-│   │   ├── routes/             # Express REST route definitions
-│   │   ├── validators/         # Zod input schemas
-│   │   └── __tests__/          # Vitest integration test suite
-│   ├── .env                    # Local environment config
-│   └── tsconfig.json           # Backend TypeScript config
-├── package.json                # Root orchestrator scripts
-└── README.md                   # Documentation
-```
-
----
-
-## 🔒 Security Architecture Highlights
-1. **Unpredictable QR Credentials**: Ticket QR codes use `crypto.randomBytes(16)` creating 128 bits of entropy.
-2. **Hash-Based Fast Indexing**: Token values are hashed with SHA-256 for rapid lookup while preventing token exposure.
-3. **Atomic Gate Check-in**:
-   ```sql
-   UPDATE tickets SET status = 'CHECKED_IN', checkedInAt = NOW() WHERE id = :id AND status = 'VALID';
-   ```
-   If two scanners attempt redemption simultaneously, exactly one succeeds and the other receives an `ALREADY_USED` rejection.
-4. **Idempotency Key Protection**: Prevents duplicate bookings and multiple charges on network retries or repeated clicks.
+### C. Frontend: Vercel
+1. Import your GitHub repository into [Vercel](https://vercel.com).
+2. Configure settings:
+   - **Root Directory**: `client`
+   - **Framework Preset**: `Vite`
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+3. Add Environment Variables:
+   - `VITE_API_URL`: `https://<your-render-backend-url>/api`
+4. Deploy. Vercel automatically assigns your production URL. Update `CLIENT_URL` in Render with this URL.
